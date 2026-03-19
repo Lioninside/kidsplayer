@@ -124,18 +124,23 @@
     state.durationMs = sdkState.duration;
 
     if (track && track.id !== state.currentTrack?.id) {
-      // Normalize SDK track to API track shape
-      const normalized = normalizeSdkTrack(track);
       // Content guard: skip explicit tracks
       if (track.explicit) {
         state.sdkPlayer?.nextTrack();
         PlayerUI.showToast('Skipped explicit content');
         return;
       }
+      const normalized = normalizeSdkTrack(track);
       state.currentTrack = normalized;
       PlayerUI.setTrack(normalized);
       highlightActiveTrack(track.id);
-      checkSavedState([track.id]);
+      // Check & update saved state, then update the now-playing fav button
+      checkSavedState([track.id]).then(() => {
+        PlayerUI.setNowPlayingFav(state.savedIds.has(track.id));
+      });
+      // Silently pre-load album into the album tab
+      const albumId = normalized.album?.id;
+      if (albumId) showAlbum(albumId, false);
     }
 
     PlayerUI.setPlayState(state.isPlaying);
@@ -183,6 +188,7 @@
         else             state.savedIds.delete(id);
       });
     } catch (e) { /* ignore */ }
+    // Return so callers can .then() after it resolves
   }
 
   function highlightActiveTrack(id) {
@@ -215,22 +221,25 @@
   // ─────────────────────────────────────────────────────────────────────────────
   async function toggleFavorite(track, btn) {
     const saved = state.savedIds.has(track.id);
+    const newSaved = !saved;
     try {
       if (saved) {
         await API.removeTrack(track.id);
         state.savedIds.delete(track.id);
-        PlayerUI.updateFavBtn(btn, false);
         PlayerUI.showToast('Removed from favorites');
       } else {
         await API.saveTrack(track.id);
         state.savedIds.add(track.id);
-        PlayerUI.updateFavBtn(btn, true);
         PlayerUI.showToast('Added to favorites ❤️');
       }
-      // Sync all instances of this track in all lists
+      // Sync all fav buttons for this track across all lists
       document.querySelectorAll(`.track-item[data-id="${track.id}"] .btn-fav`).forEach(b => {
-        if (b !== btn) PlayerUI.updateFavBtn(b, !saved);
+        PlayerUI.updateFavBtn(b, newSaved);
       });
+      // Sync the now-playing fav button if this is the current track
+      if (state.currentTrack?.id === track.id) {
+        PlayerUI.setNowPlayingFav(newSaved);
+      }
     } catch (e) {
       PlayerUI.showToast('Could not update favorites');
     }
@@ -272,9 +281,9 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // Show album
   // ─────────────────────────────────────────────────────────────────────────────
-  async function showAlbum(albumId) {
+  async function showAlbum(albumId, switchToTab = true) {
     if (!albumId) return;
-    PlayerUI.switchTab('album');
+    if (switchToTab) PlayerUI.switchTab('album');
 
     const headerEl = document.getElementById('album-header');
     const tracksEl = document.getElementById('album-tracks');
@@ -444,20 +453,44 @@
       }
     });
 
-    // Show album button
-    PlayerUI.showAlbumBtn.addEventListener('click', () => {
-      const albumId = PlayerUI.showAlbumBtn.dataset.albumId;
-      if (albumId) showAlbum(albumId);
+    // Now-playing favorite button
+    PlayerUI.nowPlayingFavBtn.addEventListener('click', () => {
+      if (!state.currentTrack) return;
+      toggleFavorite(state.currentTrack, PlayerUI.nowPlayingFavBtn);
+    });
+
+    // Spacebar = play/pause (when not typing in an input)
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (state.sdkPlayer) state.sdkPlayer.togglePlay();
+      }
     });
   }
 
   function setupSearch() {
     const searchBtn   = document.getElementById('search-btn');
     const searchInput = document.getElementById('search-input');
+    const clearBtn    = document.getElementById('clear-search-btn');
+    const errorEl     = document.getElementById('search-error');
+    const resultsEl   = document.getElementById('search-results');
 
     searchBtn.addEventListener('click', doSearch);
     searchInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') doSearch();
+    });
+
+    // Show/hide clear button as user types
+    searchInput.addEventListener('input', () => {
+      clearBtn.classList.toggle('hidden', !searchInput.value);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      clearBtn.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      resultsEl.innerHTML = '';
+      searchInput.focus();
     });
   }
 
@@ -466,6 +499,12 @@
       btn.addEventListener('click', () => {
         PlayerUI.switchTab(btn.dataset.tab);
         if (btn.dataset.tab === 'favorites') loadFavorites();
+        // If album tab opened and empty, load the current track's album
+        if (btn.dataset.tab === 'album') {
+          const albumId = state.currentTrack?.album?.id;
+          const hasContent = document.getElementById('album-tracks').children.length > 0;
+          if (albumId && !hasContent) showAlbum(albumId, false);
+        }
       });
     });
 

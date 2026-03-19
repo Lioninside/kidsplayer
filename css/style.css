@@ -205,22 +205,21 @@ input  { font-family: inherit; }
 }
 
 .turntable-base {
-  position: relative;
-  width: 280px;
-  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* The vinyl disc */
 .vinyl-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .vinyl {
-  width: 260px;
-  height: 260px;
+  width: 280px;
+  height: 280px;
   border-radius: 50%;
   position: relative;
   background:
@@ -287,47 +286,6 @@ input  { font-family: inherit; }
   z-index: 3;
 }
 
-/* ── Tonearm ───────────────────────────────────────────────────────────────── */
-.tonearm-pivot {
-  position: absolute;
-  top: 10px;
-  right: 0px;
-  width: 40px;
-  height: 40px;
-  z-index: 5;
-}
-
-.tonearm {
-  position: absolute;
-  top: 16px;
-  right: 8px;
-  width: 110px;
-  height: 7px;
-  background: linear-gradient(to left, #888, #ccc, #aaa, #888);
-  border-radius: 4px;
-  transform-origin: right center;
-  transform: rotate(-28deg);
-  transition: transform 0.5s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-}
-
-/* Tonearm head / needle */
-.tonearm-needle {
-  position: absolute;
-  left: -6px;
-  top: 50%;
-  transform: translateY(-50%) rotate(35deg);
-  width: 10px;
-  height: 4px;
-  background: #ccc;
-  border-radius: 2px;
-}
-
-/* When playing the arm rests on the record */
-.tonearm.on-record {
-  transform: rotate(-18deg);
-}
-
 /* ── Track Info ────────────────────────────────────────────────────────────── */
 .track-info {
   text-align: center;
@@ -354,20 +312,25 @@ input  { font-family: inherit; }
   text-overflow: ellipsis;
 }
 
-.btn-show-album {
-  margin-top: 8px;
+/* Favorite button for the currently playing track */
+.btn-now-playing-fav {
+  margin-top: 10px;
   background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
   border-radius: 20px;
-  padding: 5px 14px;
-  font-size: 0.8rem;
+  padding: 5px 16px;
+  font-size: 1rem;
   font-weight: 700;
-  transition: background var(--transition), color var(--transition);
+  transition: border-color var(--transition), color var(--transition), transform var(--transition);
 }
-.btn-show-album:hover {
-  background: var(--accent);
-  color: #fff;
+.btn-now-playing-fav:hover {
+  border-color: var(--accent-2);
+  transform: scale(1.08);
+}
+.btn-now-playing-fav.saved {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
 }
 
 /* ── Progress ──────────────────────────────────────────────────────────────── */
@@ -556,13 +519,20 @@ input  { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.search-input {
+.search-input-wrap {
   flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  padding: 10px 14px;
+  padding: 10px 36px 10px 14px;
   font-size: 0.9rem;
   font-weight: 600;
   outline: none;
@@ -573,6 +543,19 @@ input  { font-family: inherit; }
   box-shadow: 0 0 0 2px rgba(108,99,255,0.2);
 }
 .search-input::placeholder { color: var(--text-dim); }
+
+.btn-clear-search {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 4px;
+  line-height: 1;
+  transition: color var(--transition);
+}
+.btn-clear-search:hover { color: var(--text); }
 
 .btn-search {
   background: var(--accent);
@@ -657,8 +640,8 @@ input  { font-family: inherit; }
 }
 
 .track-thumb {
-  width: 42px;
-  height: 42px;
+  width: 50px;
+  height: 50px;
   border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
@@ -718,6 +701,43 @@ input  { font-family: inherit; }
 .btn-play-track:hover {
   color: var(--text);
   background: rgba(255,255,255,0.07);
+}
+
+/* ── Now-playing animated bars ─────────────────────────────────────────────── */
+.playing-bars {
+  display: none;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+.playing-bars span {
+  display: block;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  animation: bar-bounce 0.9s ease-in-out infinite;
+}
+.playing-bars span:nth-child(1) { animation-delay: 0s;    height: 8px; }
+.playing-bars span:nth-child(2) { animation-delay: 0.15s; height: 14px; }
+.playing-bars span:nth-child(3) { animation-delay: 0.3s;  height: 10px; }
+
+@keyframes bar-bounce {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.7; }
+  50%       { transform: scaleY(1);   opacity: 1; }
+}
+
+/* Show bars only when a track is active AND the player is playing */
+body.is-playing .track-item.active .playing-bars { display: flex; }
+/* When paused, show a static pause indicator */
+body:not(.is-playing) .track-item.active .playing-bars {
+  display: flex;
+  opacity: 0.4;
+}
+body:not(.is-playing) .track-item.active .playing-bars span {
+  animation: none;
+  height: 12px;
 }
 
 /* ── Album Header ──────────────────────────────────────────────────────────── */

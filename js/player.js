@@ -6,13 +6,12 @@ const PlayerUI = (() => {
   // ── DOM references ──────────────────────────────────────────────────────────
   const $ = id => document.getElementById(id);
 
-  const vinyl         = $('vinyl');
-  const vinylArt      = $('vinyl-art');
-  const tonearm       = $('tonearm');
-  const trackName     = $('track-name');
-  const artistName    = $('artist-name');
-  const showAlbumBtn  = $('show-album-btn');
-  const progressSlider= $('progress-slider');
+  const vinyl            = $('vinyl');
+  const vinylArt         = $('vinyl-art');
+  const trackName        = $('track-name');
+  const artistName       = $('artist-name');
+  const nowPlayingFavBtn = $('now-playing-fav-btn');
+  const progressSlider   = $('progress-slider');
   const currentTime   = $('current-time');
   const totalTime     = $('total-time');
   const playPauseBtn  = $('play-pause-btn');
@@ -37,39 +36,38 @@ const PlayerUI = (() => {
   // ── Track display ────────────────────────────────────────────────────────────
   function setTrack(track) {
     if (!track) {
-      trackName.textContent   = 'No track playing';
-      artistName.textContent  = 'Select a song to start';
-      vinylArt.src            = '';
-      vinylArt.style.display  = 'none';
-      showAlbumBtn.classList.add('hidden');
+      trackName.textContent  = 'No track playing';
+      artistName.textContent = 'Select a song to start';
+      vinylArt.src           = '';
+      vinylArt.style.display = 'none';
+      nowPlayingFavBtn.classList.add('hidden');
       return;
     }
 
     const art = track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || '';
-    trackName.textContent   = track.name;
-    artistName.textContent  = track.artists?.map(a => a.name).join(', ') || '';
-    vinylArt.src            = art;
-    vinylArt.style.display  = art ? 'block' : 'none';
-    showAlbumBtn.classList.remove('hidden');
-    showAlbumBtn.dataset.albumId = track.album?.id || '';
+    trackName.textContent  = track.name;
+    trackName.title        = track.name; // tooltip for long names
+    artistName.textContent = track.artists?.map(a => a.name).join(', ') || '';
+    vinylArt.src           = art;
+    vinylArt.style.display = art ? 'block' : 'none';
+    nowPlayingFavBtn.classList.remove('hidden');
+    nowPlayingFavBtn.dataset.trackId = track.id;
 
-    // Update page title
     document.title = `${track.name} – Lioninside Kids Player`;
+  }
+
+  function setNowPlayingFav(saved) {
+    nowPlayingFavBtn.textContent = saved ? '❤️ Saved' : '🤍 Save';
+    nowPlayingFavBtn.classList.toggle('saved', saved);
+    nowPlayingFavBtn.title = saved ? 'Remove from favorites' : 'Add to favorites';
   }
 
   // ── Play/Pause state ─────────────────────────────────────────────────────────
   function setPlayState(playing) {
-    if (playing) {
-      vinyl.classList.add('spinning');
-      tonearm.classList.add('on-record');
-      iconPlay.classList.add('hidden');
-      iconPause.classList.remove('hidden');
-    } else {
-      vinyl.classList.remove('spinning');
-      tonearm.classList.remove('on-record');
-      iconPlay.classList.remove('hidden');
-      iconPause.classList.add('hidden');
-    }
+    document.body.classList.toggle('is-playing', playing);
+    vinyl.classList.toggle('spinning', playing);
+    iconPlay.classList.toggle('hidden', playing);
+    iconPause.classList.toggle('hidden', !playing);
   }
 
   // ── Progress ─────────────────────────────────────────────────────────────────
@@ -117,22 +115,17 @@ const PlayerUI = (() => {
 
     item.innerHTML = `
       <img class="track-thumb" src="${art}" alt="" loading="lazy">
+      <div class="playing-bars"><span></span><span></span><span></span></div>
       <div class="track-meta">
-        <div class="track-title">${_esc(track.name)}</div>
+        <div class="track-title" title="${_esc(track.name)}">${_esc(track.name)}</div>
         <div class="track-artist">${_esc(track.artists?.map(a => a.name).join(', ') || '')}</div>
       </div>
       <div class="track-actions">
         <button class="btn-fav ${isSaved ? 'saved' : ''}" title="${isSaved ? 'Remove from favorites' : 'Add to favorites'}">
           ${isSaved ? '❤️' : '🤍'}
         </button>
-        <button class="btn-play-track" title="Play">▶</button>
       </div>
     `;
-
-    item.querySelector('.btn-play-track').addEventListener('click', e => {
-      e.stopPropagation();
-      if (onPlay) onPlay(track);
-    });
 
     item.querySelector('.btn-fav').addEventListener('click', e => {
       e.stopPropagation();
@@ -225,6 +218,7 @@ const PlayerUI = (() => {
 
   return {
     setTrack,
+    setNowPlayingFav,
     setPlayState,
     setProgress,
     setVolume,
@@ -242,6 +236,6 @@ const PlayerUI = (() => {
     progressSlider,
     volumeSlider,
     muteBtn,
-    showAlbumBtn,
+    nowPlayingFavBtn,
   };
 })();

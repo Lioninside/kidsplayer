@@ -73,11 +73,11 @@ const API = (() => {
   }
 
   async function saveTrack(id) {
-    await _fetch(`/me/tracks?ids=${id}`, { method: 'PUT' });
+    await _fetch('/me/tracks', { method: 'PUT', body: JSON.stringify({ ids: [id] }) });
   }
 
   async function removeTrack(id) {
-    await _fetch(`/me/tracks?ids=${id}`, { method: 'DELETE' });
+    await _fetch('/me/tracks', { method: 'DELETE', body: JSON.stringify({ ids: [id] }) });
   }
 
   // ── Album ─────────────────────────────────────────────────────────────────────

@@ -64,13 +64,6 @@
               </div>
             </div>
 
-            <!-- Tonearm -->
-            <div class="tonearm-pivot">
-              <div class="tonearm" id="tonearm">
-                <div class="tonearm-needle"></div>
-              </div>
-            </div>
-
           </div><!-- /turntable-base -->
         </div><!-- /turntable-wrapper -->
 
@@ -78,7 +71,7 @@
         <div class="track-info">
           <h2 id="track-name" class="track-name">No track playing</h2>
           <p id="artist-name" class="artist-name">Connect to start listening</p>
-          <button id="show-album-btn" class="btn-show-album hidden">💿 Show Album</button>
+          <button id="now-playing-fav-btn" class="btn-now-playing-fav hidden" title="Add to favorites">🤍</button>
         </div>
 
         <!-- Progress bar -->
@@ -139,8 +132,11 @@
         <!-- Search Tab -->
         <div id="tab-search" class="tab-content active">
           <div class="search-bar">
-            <input type="text" id="search-input" class="search-input"
-                   placeholder="Search for a song…" autocomplete="off" spellcheck="false">
+            <div class="search-input-wrap">
+              <input type="text" id="search-input" class="search-input"
+                     placeholder="Search for a song…" autocomplete="off" spellcheck="false">
+              <button id="clear-search-btn" class="btn-clear-search hidden" title="Clear">✕</button>
+            </div>
             <button id="search-btn" class="btn-search">Search</button>
           </div>
           <div id="search-error" class="search-error hidden"></div>
