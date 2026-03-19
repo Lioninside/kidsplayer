@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const CONFIG = {
   CLIENT_ID: '17e0079554f7472aa14f0b4482a546bb',
-  REDIRECT_URI: 'https://bartlome.com/bestkids/kidsplayerv2',
+  REDIRECT_URI: 'https://bartlome.com/bestkids/kidsplayerv2/index.html',
   SCOPES: [
     'streaming',
     'user-read-email',
