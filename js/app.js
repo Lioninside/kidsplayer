@@ -241,7 +241,12 @@
         PlayerUI.setNowPlayingFav(newSaved);
       }
     } catch (e) {
-      PlayerUI.showToast('Could not update favorites');
+      const msg = e.message || '';
+      if (msg.includes('403') || msg.toLowerCase().includes('forbidden') || msg.toLowerCase().includes('scope')) {
+        PlayerUI.showToast('⚠️ Please click "Connect Spotify" to re-authorize favorites.');
+      } else {
+        PlayerUI.showToast('Could not update favorites: ' + (msg || 'Unknown error'));
+      }
     }
   }
 
@@ -374,7 +379,8 @@
     const loginBtn     = document.getElementById('login-btn');
     const reconnectBtn = document.getElementById('reconnect-btn');
     if (loginBtn)     loginBtn.addEventListener('click', () => Auth.login());
-    if (reconnectBtn) reconnectBtn.addEventListener('click', () => Auth.login());
+    // Logout first so Spotify issues a brand-new token with all current scopes
+    if (reconnectBtn) reconnectBtn.addEventListener('click', () => { Auth.logout(); Auth.login(); });
   }
 
   function setupControls() {

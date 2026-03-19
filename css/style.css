@@ -640,9 +640,9 @@ input  { font-family: inherit; }
 }
 
 .track-thumb {
-  width: 50px;
-  height: 50px;
-  border-radius: 6px;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
   background: var(--card);
@@ -750,8 +750,8 @@ body:not(.is-playing) .track-item.active .playing-bars span {
 }
 
 .album-cover {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
