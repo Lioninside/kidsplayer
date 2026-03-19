@@ -11,14 +11,12 @@ const API = (() => {
       return null;
     }
 
-    const res = await fetch(`${BASE}${path}`, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    // Only send Content-Type when there is a request body
+    const headers = { Authorization: `Bearer ${token}` };
+    if (options.body) headers['Content-Type'] = 'application/json';
+    if (options.headers) Object.assign(headers, options.headers);
+
+    const res = await fetch(`${BASE}${path}`, { ...options, headers });
 
     if (res.status === 401) {
       const refreshed = await Auth.refreshToken();
@@ -26,13 +24,20 @@ const API = (() => {
       return _fetch(path, options); // retry once
     }
 
-    if (res.status === 204 || res.status === 202) return null; // no content
+    // Some endpoints return 204/202 No Content — that is fine
+    if (res.status === 204 || res.status === 202) return null;
+
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `API error ${res.status}`);
+      // Try to parse error body; fall back gracefully
+      let msg = `API error ${res.status}`;
+      try { const e = await res.json(); msg = e.error?.message || msg; } catch (_) {}
+      throw new Error(msg);
     }
 
-    return res.json();
+    // Safely parse JSON — Spotify returns 200 with empty body on some write endpoints
+    const text = await res.text();
+    if (!text || !text.trim()) return null;
+    return JSON.parse(text);
   }
 
   // ── User ─────────────────────────────────────────────────────────────────────
