@@ -16,6 +16,11 @@
     savedIds:       new Set(),
     blockedWords:   [],
     progressTimer:  null,   // local timer to tick progress between SDK events
+    searchTracks:   [],
+    albumTracks:    [],
+    favsTracks:     [],
+    favsOffset:     0,
+    favsTotal:      0,
   };
 
   // ── Load blocked words ───────────────────────────────────────────────────────
@@ -200,7 +205,7 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // Play a track
   // ─────────────────────────────────────────────────────────────────────────────
-  async function playTrack(track) {
+  async function playTrack(track, playlist = null) {
     if (!state.deviceId) {
       PlayerUI.showToast('Player not ready. Please wait…');
       return;
@@ -209,8 +214,20 @@
       PlayerUI.showToast('This track contains explicit content and cannot be played here.');
       return;
     }
+    let payload;
+    if (playlist && playlist.length > 1) {
+      // Pass the full playlist so Spotify auto-advances through tracks
+      const safeList = playlist.filter(t => !t.explicit);
+      const startIdx = safeList.findIndex(t => t.id === track.id);
+      payload = {
+        uris: safeList.map(t => `spotify:track:${t.id}`),
+        offset: { position: Math.max(0, startIdx) },
+      };
+    } else {
+      payload = { uris: [`spotify:track:${track.id}`] };
+    }
     try {
-      await API.startPlayback(state.deviceId, { uris: [`spotify:track:${track.id}`] });
+      await API.startPlayback(state.deviceId, payload);
     } catch (e) {
       PlayerUI.showToast('Playback error: ' + (e.message || 'Unknown'));
     }
@@ -265,21 +282,45 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // Load favorites
   // ─────────────────────────────────────────────────────────────────────────────
-  async function loadFavorites() {
-    const container = document.getElementById('favorites-list');
-    container.innerHTML = `<div class="state-msg"><span>⏳</span>Loading…</div>`;
-    try {
-      const tracks = await API.getSavedTracks(50);
-      tracks.forEach(t => state.savedIds.add(t.id));
+  async function loadFavorites(append = false) {
+    const container   = document.getElementById('favorites-list');
+    const loadMoreBtn = document.getElementById('load-more-favs-btn');
 
-      PlayerUI.renderTrackList(container, tracks, {
-        savedIds: state.savedIds,
-        activeId: state.currentTrack?.id,
-        onPlay:   playTrack,
-        onFav:    toggleFavorite,
-      });
+    if (!append) {
+      state.favsOffset = 0;
+      state.favsTracks = [];
+      container.innerHTML = `<div class="state-msg"><span>⏳</span>Loading…</div>`;
+    }
+
+    try {
+      const { tracks, total } = await API.getSavedTracks(50, state.favsOffset);
+      state.favsTotal   = total;
+      state.favsOffset += tracks.length;
+      tracks.forEach(t => state.savedIds.add(t.id));
+      state.favsTracks  = [...state.favsTracks, ...tracks];
+
+      if (!append) container.innerHTML = '';
+
+      if (!tracks.length && !append) {
+        container.innerHTML = `<div class="state-msg"><span>🎵</span>No favorites yet</div>`;
+      } else {
+        tracks.forEach(track => {
+          const el = PlayerUI.buildTrackItem(track, {
+            isSaved:  state.savedIds.has(track.id),
+            isActive: track.id === state.currentTrack?.id,
+            onPlay:   t => playTrack(t, state.favsTracks),
+            onFav:    toggleFavorite,
+          });
+          container.appendChild(el);
+        });
+      }
+
+      loadMoreBtn.classList.toggle('hidden', state.favsOffset >= state.favsTotal);
     } catch (e) {
-      container.innerHTML = `<div class="state-msg"><span>⚠️</span>Could not load favorites</div>`;
+      if (!append) {
+        container.innerHTML = `<div class="state-msg"><span>⚠️</span>Could not load favorites</div>`;
+      }
+      loadMoreBtn.classList.add('hidden');
     }
   }
 
@@ -305,11 +346,12 @@
       // Album tracks from /albums/:id/tracks don't have album info; add it back
       tracks.forEach(t => { t.album = album; });
 
+      state.albumTracks = tracks;
       PlayerUI.renderAlbumHeader(headerEl, album);
       PlayerUI.renderTrackList(tracksEl, tracks, {
         savedIds: state.savedIds,
         activeId: state.currentTrack?.id,
-        onPlay:   playTrack,
+        onPlay:   t => playTrack(t, state.albumTracks),
         onFav:    toggleFavorite,
       });
     } catch (e) {
@@ -361,10 +403,11 @@
         } catch (e) { /* ignore */ }
       }
 
+      state.searchTracks = tracks;
       PlayerUI.renderTrackList(results, tracks, {
         savedIds: state.savedIds,
         activeId: state.currentTrack?.id,
-        onPlay:   playTrack,
+        onPlay:   t => playTrack(t, state.searchTracks),
         onFav:    toggleFavorite,
       });
     } catch (e) {
@@ -514,7 +557,8 @@
       });
     });
 
-    document.getElementById('refresh-favs-btn').addEventListener('click', loadFavorites);
+    document.getElementById('refresh-favs-btn').addEventListener('click', () => loadFavorites(false));
+    document.getElementById('load-more-favs-btn').addEventListener('click', () => loadFavorites(true));
   }
 
 })();

@@ -63,12 +63,12 @@ const API = (() => {
   // ── Saved Tracks (Favorites) ─────────────────────────────────────────────────
   async function getSavedTracks(limit = 50, offset = 0) {
     const data = await _fetch(`/me/tracks?limit=${limit}&offset=${offset}&market=from_token`);
-    if (!data) return [];
+    if (!data) return { tracks: [], total: 0 };
 
-    // Filter out any explicit tracks that may have slipped through
-    return (data.items || [])
+    const tracks = (data.items || [])
       .map(item => item.track)
       .filter(t => t && !t.explicit && t.type === 'track');
+    return { tracks, total: data.total || 0 };
   }
 
   async function checkSavedTracks(ids) {
