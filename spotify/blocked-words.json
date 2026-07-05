@@ -1,0 +1,26 @@
+{
+  "_comment": "Add words per category that kids should not be able to search for. All matching is case-insensitive and whole-word.",
+  "violence": [
+    "murder", "kill", "killing", "killed", "killer", "shoot", "shooting",
+    "blood", "gore", "slaughter", "massacre", "torture", "death", "dead",
+    "suicide", "weapon", "gun", "knife", "stab"
+  ],
+  "drugs_alcohol": [
+    "cocaine", "heroin", "meth", "methamphetamine", "crack", "ecstasy",
+    "weed", "marijuana", "cannabis", "blunt", "bong", "molly", "lsd",
+    "dope", "overdose", "drunk", "alcohol", "beer", "whiskey", "vodka",
+    "champagne", "liquor", "booze"
+  ],
+  "sexual": [
+    "sex", "sexy", "sexual", "porn", "pornography", "nude", "naked",
+    "erotic", "xxx", "adult"
+  ],
+  "profanity": [
+    "fuck", "fucking", "fucker", "shit", "bullshit", "bitch", "cunt",
+    "asshole", "bastard", "piss", "prick", "whore", "slut", "dick",
+    "cock", "pussy", "motherfucker", "nigga", "nigger", "faggot"
+  ],
+  "hate": [
+    "racist", "racism", "nazi", "hate", "hater", "supremacy"
+  ]
+}
