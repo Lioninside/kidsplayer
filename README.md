@@ -1,62 +1,71 @@
 # Lioninside Kids Player
 
-A safe, kid-friendly Spotify music player — no explicit content, no adult podcasts, no distracting videos. Just music.
+Sicherer, kinderfreundlicher Spotify-Player — keine expliziten Inhalte, keine
+Erwachsenen-Podcasts, keine ablenkenden Videos. Nur Musik.
 
-Built for parents who want their kids to enjoy Spotify freely without stumbling into inappropriate content.
+Dieses Repo enthält **zwei eigenständige Oberflächen**, die getrennt
+weiterentwickelt werden. Beide setzen denselben Kinderschutz um, haben aber
+jeweils komplett eigene Dateien — **kein gemeinsamer Code** (bewusst so, damit
+beide unabhängig voneinander wachsen können).
 
-## What it does
+## Die zwei Versionen
 
-- Connects to your Spotify account via a secure login
-- Lets kids search and play music
-- Automatically blocks explicit tracks
-- Filters out inappropriate search terms (violence, drugs, sexual content, hate speech)
-- Shows album views and lets kids save their favorite songs
-- Works entirely in the browser — no app install needed
+| Ordner | Version | Charakter |
+|---|---|---|
+| [`playful-ui/`](playful-ui/) | Version 1 | Verspielt und bunt, für Kinder — Vinyl-Optik, grosse Buttons, verspielte Animationen |
+| [`spotify-ui/`](spotify-ui/) | Version 2 | Nah am Spotify-Desktop-Client — feste Seitenleiste, Playlists, Alben, Warteschlange, Künstler-Ansichten |
 
-## Requirements
+Jeder Ordner ist eine **vollständige, für sich lauffähige App** mit eigener
+`index.html`, eigenem `blocked-words.json` und eigenem JS/CSS. Jede Version wird
+separat auf eine eigene URL deployt.
 
-- Spotify Premium account
-- A modern web browser
+## Gemeinsame technische Basis
 
-## Tech stack
+- Vanilla JavaScript, kein Framework, kein Build-Schritt
+- Spotify Web Playback SDK + Web API, OAuth 2.0 mit PKCE (kein Client Secret)
+- **Spotify Premium erforderlich** (Browser-Wiedergabe)
+- Statisches Hosting genügt (nur HTML/CSS/JS)
+- Gleiche Spotify-App / Client-ID für beide Versionen
 
-- Vanilla JavaScript (no frameworks)
-- Spotify Web Playback SDK
-- Spotify Web API with OAuth 2.0 PKCE flow
-- Static HTML/CSS — no backend needed
+## Kinderschutz (beide Versionen)
 
-## Content filtering
+1. **Explicit-Filter** — jeder von Spotify als *explicit* markierte Titel wird
+   herausgefiltert und nicht abgespielt.
+2. **Suchwort-Filter** — Suchen mit gesperrten Begriffen aus `blocked-words.json`
+   (Gewalt, Drogen, Sexuelles, Schimpfwörter, Hass) werden abgewiesen.
 
-Two layers of protection:
+## Einrichtung & Deployment
 
-1. **Explicit track filter** — any track marked explicit by Spotify is blocked before it plays
-2. **Search word filter** — searches containing blocked terms (defined in `blocked-words.json`) are rejected with a friendly message
+1. Client-ID steht in der jeweiligen `config.js` (beide nutzen dieselbe App).
+2. Jede Version leitet ihre **Redirect-URI zur Laufzeit aus ihrer eigenen
+   Adresse ab** — sie funktioniert also in jedem Deploy-Ordner. Die exakte URL
+   jeder deployten Version muss im
+   [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) unter
+   *Redirect URIs* eingetragen sein. Die Login-Seite jeder Version zeigt die
+   benötigte URL an.
+3. HTTPS ist Pflicht (Web Playback SDK).
+4. Im Development-Mode der App muss der genutzte Account unter *User Management*
+   freigeschaltet sein.
 
-## Setup
+Details je Version stehen in der README im jeweiligen Ordner:
+[`playful-ui/README.md`](playful-ui/README.md) · [`spotify-ui/README.md`](spotify-ui/README.md)
 
-1. Create a Spotify app at [developer.spotify.com](https://developer.spotify.com)
-2. Set your `CLIENT_ID` and `REDIRECT_URI` in `js/config.js`
-3. Add your redirect URI to the Spotify app's allowed redirect URIs
-4. Host the files on any static web server
-
-No build step, no dependencies to install.
-
-## Project structure
+## Struktur
 
 ```
 kidsplayer/
-├── index.html
-├── blocked-words.json
-├── css/
-│   └── style.css
-└── js/
-    ├── config.js       # Spotify credentials & scopes
-    ├── auth.js         # PKCE OAuth flow & token refresh
-    ├── api.js          # Spotify API wrapper
-    ├── player.js       # UI rendering
-    └── app.js          # Main app logic & state
+├── README.md                 ← diese Übersicht
+├── playful-ui/               ← Version 1 (verspielt, für Kids)
+│   ├── index.html
+│   ├── blocked-words.json
+│   ├── css/style.css
+│   └── js/{config,auth,api,player,app}.js
+└── spotify-ui/               ← Version 2 (Spotify-Desktop-Stil)
+    ├── index.html
+    ├── style.css
+    ├── blocked-words.json
+    └── {config,auth,api,app}.js
 ```
 
-## Live demo
-
-[bartlome.com/bestkids/kidsplayerv2/](https://bartlome.com/bestkids/kidsplayerv2/)
+Gemeinsame, geteilte Daten sind derzeit **nicht** vorgesehen. Falls später doch
+etwas geteilt werden soll, käme dafür ein eigener `shared/`-Ordner in Frage.

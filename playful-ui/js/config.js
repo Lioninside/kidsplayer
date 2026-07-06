@@ -4,7 +4,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const CONFIG = {
   CLIENT_ID: '17e0079554f7472aa14f0b4482a546bb',
-  REDIRECT_URI: 'https://bartlome.com/bestkids/kidsplayerv2/index.html',
+  // Redirect-URI wird zur Laufzeit aus der Adresse dieser Seite gebildet, damit
+  // der Player unabhängig vom Deploy-Ordner funktioniert. Diese exakte URL muss
+  // im Spotify Developer Dashboard unter "Redirect URIs" eingetragen sein.
+  REDIRECT_URI: window.location.origin + window.location.pathname,
   SCOPES: [
     'streaming',
     'user-read-email',
