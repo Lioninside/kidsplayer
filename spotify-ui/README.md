@@ -1,13 +1,15 @@
-# Kids Player — Spotify-Desktop-UI (mit Kinderschutz)
+# Kids Player — Spotify-UI (Version 2)
 
-Zweite, reichhaltigere Oberfläche für den Lioninside Kids Player, im Stil des
+Reichhaltigere Oberfläche für den Lioninside Kids Player, im Stil des
 Spotify-Desktop-Clients: feste Seitenleiste (Home, Suche, Deine Bibliothek,
 Playlists, Gespeicherte Alben), Zuletzt gehört, Warteschlange, Künstler-Ansichten,
 Wiederhol-Modi. Spielt echte Musik über das Spotify-Konto (Web API +
 Web Playback SDK, **Spotify Premium erforderlich**).
 
-Diese UI liegt **neben** der bestehenden Version 1 (im Repo-Root) in einem eigenen
-Unterordner und teilt sich deren Kinderschutz.
+Dies ist eine von zwei eigenständigen Oberflächen in diesem Repo — siehe die
+[Repo-Übersicht](../README.md); die verspielte Kinder-Oberfläche liegt in
+[`../playful-ui/`](../playful-ui/). Die beiden teilen sich keinen Code, aber
+denselben Kinderschutz-Ansatz.
 
 ## Kinderschutz (wie Version 1)
 
@@ -42,10 +44,10 @@ unabhängig gepflegt werden.
 ## Einrichtung / Deployment
 
 1. Diesen Ordner auf den Webserver legen, z. B. nach
-   `…/bestkids/kidsplayerv2/spotify/` — dann erreichbar unter
-   `https://bartlome.com/bestkids/kidsplayerv2/spotify/`.
+   `…/bestkids/kidsplayerv2/spotify-ui/` — dann erreichbar unter
+   `https://bartlome.com/bestkids/kidsplayerv2/spotify-ui/`.
 2. **Redirect-URI im Spotify Dashboard eintragen:** die exakte URL dieser Seite,
-   also `https://bartlome.com/bestkids/kidsplayerv2/spotify/index.html`.
+   also `https://bartlome.com/bestkids/kidsplayerv2/spotify-ui/index.html`.
    Der Login-Screen zeigt die benötigte URI unten an.
 3. **HTTPS** ist Pflicht (Web Playback SDK).
 4. Der angemeldete Account braucht **Spotify Premium**. Im Development-Mode der
